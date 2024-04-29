@@ -5,26 +5,20 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
-from sklearn.metrics import confusion_matrix
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import make_scorer
-from sklearn import svm
 import pandas as pd
-from sklearn.model_selection import train_test_split
-
-from sklearn.model_selection import StratifiedKFold, cross_validate
+import tkinter as tk
 
 from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import GridSearchCV
 
-from sklearn.metrics import precision_score, recall_score, f1_score
+from sklearn import svm, metrics
+
+from sklearn.metrics import (precision_score, recall_score, 
+f1_score, accuracy_score, make_scorer, confusion_matrix)
+
+from sklearn.model_selection import (train_test_split, StratifiedKFold, 
+cross_validate, GridSearchCV, learning_curve)
 
 from sklearn.feature_selection import RFE
-from sklearn.svm import SVC
-from sklearn import metrics
-from sklearn.model_selection import learning_curve
-
-import tkinter as tk
 
 # we pre process the data
 def convertToNumerical():
@@ -100,7 +94,7 @@ def generateConfMatrix(trainedSVM, X_test, y_test):
     
     # We then pass it into the sklearn matrix method
     displayMatrix = metrics.ConfusionMatrixDisplay(confusion_matrix = matrix, 
-                                                display_labels = [0, 1]) # [0, 1]
+                                                display_labels = ['Approved', 'Rejected']) # [0, 1]
     
     # we then plot the matrix
     displayMatrix.plot()
@@ -110,9 +104,7 @@ pass
 # accuracy when doing k fold cross validation
 def kFold(mySVM, X_training, y_training):
     
-    # # Define a Pipeline with StandardScaler and SVM
-    # pipeline = Pipeline([('scaler', scaler), ('svm', mySVM)])
-    
+    # These are the metrics we want to find out about the training data
     scoring = { 'accuracy': make_scorer(accuracy_score), 'precision': make_scorer(precision_score),
     'recall': make_scorer(recall_score), 'f1': make_scorer(f1_score) }
     
@@ -129,19 +121,7 @@ pass
 # This method will be used to find the best hyperparameters from a given set
 def findingHyperparam(mySVM, X_training, y_training):
     
-    # # we use pipeline to group the items we'll be using to process the
-    # # gridSearchCV. It will transform the data using scaler then pass it in
-    # # our model
-    # pipeline = Pipeline([('scaler', scaler), ('svm', mySVM)])
-    
-    # # Define hyperparameters to search
-    # gridParameters = {
-    #     'svm__C': [0.1, 1, 10, 100, 1000, 10000],          # Regularization parameter
-    #     'svm__kernel': ['rbf'],   # Kernel type 'linear', 'rbf', 'poly'
-    #     'svm__gamma': [0.001, 0.0055,0.01, 0.1, 1, 10]     # Kernel coefficient for 'rbf' and 'poly'
-    # }
-    
-    # Define hyperparameters to search
+    # Define hyperparameters to perform gridSearchCV
     gridParameters = {
         'C': [0.1, 1, 10, 100, 1000, 10000],          # Regularization parameter
         'kernel': ['rbf'],   # Kernel type 'linear', 'rbf', 'poly'
@@ -168,16 +148,12 @@ pass
 
 def findingBestFeatures(X, X_training, y_training):
     
-    # # We scale the data using standardscaler so we reduce the feature biases
-    # # in which different features have different scales in data
-    # scaler = StandardScaler()
+    # We get the column names for print output
     column_names = X.columns
+    # We put the training data in a dataframe to allow to be processed
     X_training = pd.DataFrame(X_training)
     
-    # # We scale the entire feature set using StandardScaler
-    # X_scaled = scaler.fit_transform(X)
-    
-    svc = SVC(kernel="linear") # Finding the best feature for SVM
+    svc = svm.SVC(kernel="linear") # Finding the best feature for SVM
     
     # We use Recursive Feature Elimination to find the rank of which feature
     # We want a 1 ranking to 1 feature, so n_features.. = 1
@@ -230,7 +206,7 @@ def main():
     dataset = convertToNumerical()
     
     # get all values from each column except last column/classifier and
-    # first column (loan id)
+    # first column/column 0 (loan id)
     X = dataset.iloc[:, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]]
     
     # get all values from only the last column/classifier
@@ -271,7 +247,6 @@ def main():
     featureScaler.fit(X_train)  
     X_train = featureScaler.transform(X_train) 
     X_test = featureScaler.transform(X_test) 
-    
     
     # The default settings: C=1.0, kernel='rbf', gamma='scale'
     mySVM = svm.SVC(C=1.0, kernel='rbf', gamma='scale') 
@@ -322,12 +297,13 @@ def main():
     print('\n')
 
     # Plotting learning curves
-    print(plotLearningCurves(trainedSVM, X_train, y_train))
+    plotLearningCurves(trainedSVM, X_train, y_train)
     
+    # Generating Confusion Matrix
     generateConfMatrix(trainedSVM, X_test, y_test)
     
-    app = applicationGUI(trainedSVM, featureScaler)
-    
+    # Launching Loan Approval Recommender System
+    applicationGUI(trainedSVM, featureScaler)
 pass
 
 class applicationGUI:
@@ -390,18 +366,27 @@ class applicationGUI:
         income = int(self.income.get())
         loanTerm = int(self.loanTerm.get())
         
-        submission = np.array([[income, la, loanTerm, cs]])
+        # we define the input in a dictionary
+        submission = {' income_annum': [income], ' loan_amount': [la], ' loan_term': [loanTerm],
+                      ' cibil_score': [cs]}
+        
+        # we put it in a dataframe
+        submission = pd.DataFrame(submission)
+        
+        # we scale the new data point using the same scalar used for the test
+        # and training data
         newSubmission = self.featureScaler.transform(submission)
         
+        # we make a prediction using the inputted data
         prediction = self.trainedSVM.predict(newSubmission)
         outcome = prediction[0]
-        print(prediction)
+        
+        # We display if they have been approved or not
         if(outcome == 0):
          self.predictionSubmission.config(text='Approved')    
         else:
          self.predictionSubmission.config(text='Rejected')
     pass
-
 pass
 
 main()
