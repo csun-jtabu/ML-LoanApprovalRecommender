@@ -22,6 +22,7 @@ from sklearn.metrics import precision_score, recall_score, f1_score
 from sklearn.feature_selection import RFE
 from sklearn.svm import SVC
 from sklearn import metrics
+from sklearn.model_selection import learning_curve
 
 import tkinter as tk
 
@@ -197,6 +198,32 @@ def findingBestFeatures(X, X_training, y_training):
     print('\n')
 pass
 
+def plotLearningCurves(trainedSVM, X_train, y_train):
+    # Specifying training sizes, there is a limitation of a maximum size of 2390
+    train_sizes = np.linspace(0.1, 1.0, 10) * 2390
+    # Converting to integer
+    train_sizes = train_sizes.astype(int)
+    # Computing the learning curves
+    # cv stands for cross-validation folding
+    train_sizes_abs, train_scores, test_scores = learning_curve(trainedSVM, X_train, y_train, cv=5, train_sizes=train_sizes)
+
+    # Mean of scores
+    train_mean = np.mean(train_scores, axis=1)
+    test_mean = np.mean(test_scores, axis=1)
+
+    # Plot learning curves
+    plt.figure(figsize=(10, 8))
+    plt.plot(train_sizes, train_mean, label='Training score')
+    plt.plot(train_sizes, test_mean, label='Cross-validation score')
+
+    # Plot settings
+    plt.title('Learning Curves')
+    plt.xlabel('Training Set Size')
+    plt.ylabel('Score')
+    plt.grid(True)
+    plt.legend(loc='best')
+    plt.show()
+
 def main():
     
     # we first convert the dataset from categorical to numerical data
@@ -293,6 +320,9 @@ def main():
     print("Recall: " + str(recall))
     print("F1 Score: " + str(f1Score))
     print('\n')
+
+    # Plotting learning curves
+    print(plotLearningCurves(trainedSVM, X_train, y_train))
     
     generateConfMatrix(trainedSVM, X_test, y_test)
     
