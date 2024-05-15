@@ -6,7 +6,17 @@ Machine Learning Project for COMP 542
 Project Abstract:
 With the current trends in artificial intelligence and machine learning, many processes in our society have begun to incorporate artificial intelligence techniques. From advertisement recommendation systems to spam filters, machine learning has been implemented in our daily lives in many ways. One industry that may benefit from implementing machine learning is the banking industry. Every day, the banking industry partakes in many risky transactions. One risky transaction banks perform that can be improved with machine learning is loan approval. To get approved for a loan, banks have underwriters determine if a candidate is worthy of a loan. These underwriters account for many details about the applicant, such as credit score, income, and assets. Although the current system seems fair, the system has underlying problems such as underwriter biases, overreliance on credit scores, and the lack of transparency in the loan approval process. With that being said, we propose a new system that adds a recommender system to the loan approval process. The system will use a Binary Nonlinear Support Vector Machine (SVM) to determine if a person will be approved for a loan. To do so, the SVM will be trained and tested based on 11 unbiased features: number of dependents, education level, employment status, annual income, loan amount, loan terms, credit score, residential asset value, commercial assets value, luxury assets value, and bank assets value. For our dataset, we will be using Archit Sharma’s “Loan-Approval-Prediction-Dataset” from Kaggle. Because of its ability to scale to an infinite number of dimensions for nonlinear data, the SVM will use the Radial Basis Function Kernel to separate the data and classify new test data into its respective categories. To get an accurate result, we will also look into fine-tuning the hyperparameters “C” and “gamma” in the model. Upon completion of the project, we will produce a recommendation model that will make the loan approval process more fair.
 
-
+General Steps we took:
+1. We split the data (Test/Training)
+2. We converted the categorical data to numerical
+3. We performed Feature selection using Recursive Function Elimination to find the ranking of most significant features in our dataset for our Support vector machine
+4. We scaled the data with the new set of features
+5. We trained the support vector machine
+6. We tested its accuracy with k fold
+7. We then used GridSearchCV to find the best hyperparameters
+8. We then retrained a new model with the best hyperparameters and best features
+9. We then generated the results (accuracy, f1 score, precision, recall, and confusion matrix)
+10. We then made a GUI to allow users to input their own values
 
 PROJECT GUIDELINES
 - Project Topic and Abstract Submission: March 20
